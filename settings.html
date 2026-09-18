@@ -1,0 +1,440 @@
+{% extends "base.html" %}
+{% block title %}إعدادات الجداول{% endblock %}
+{% block page_title %}إعدادات الجداول{% endblock %}
+{% block page_subtitle %}تخصيص تسميات أعمدة جداول مؤشرات الكفاءة{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <div class="card mb-4">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="fas fa-sliders-h"></i>
+        <span>تسميات أعمدة جدول مؤشرات الكفاءة</span>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-4" style="font-size:13px;">
+          <i class="fas fa-info-circle me-1 text-primary"></i>
+          تظهر هذه التسميات في رأس الجدول في تقارير المدرسة والمجمع والشركة.
+          اتركها فارغة للعودة للقيمة الافتراضية.
+        </p>
+
+        <form method="POST" action="{{ url_for('settings') }}">
+
+          {# ─── مجموعة: بيانات أساسية ─── #}
+          <div class="settings-group mb-4">
+            <div class="settings-group-title">
+              <i class="fas fa-table me-2"></i>أعمدة البيانات الأساسية
+            </div>
+            <div class="row g-3 mt-1">
+
+              <div class="col-md-4">
+                <label class="form-label settings-label">
+                  عمود المدرسة
+                  <span class="default-badge">{{ defaults.col_school }}</span>
+                </label>
+                <input type="text" name="col_school" class="form-control settings-input"
+                       value="{{ labels.col_school }}"
+                       placeholder="{{ defaults.col_school }}">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label settings-label">
+                  عمود الطلاب
+                  <span class="default-badge">{{ defaults.col_students }}</span>
+                </label>
+                <input type="text" name="col_students" class="form-control settings-input"
+                       value="{{ labels.col_students }}"
+                       placeholder="{{ defaults.col_students }}">
+              </div>
+
+              <div class="col-md-4">
+                <label class="form-label settings-label">
+                  عمود الفصول
+                  <span class="default-badge">{{ defaults.col_classes }}</span>
+                </label>
+                <input type="text" name="col_classes" class="form-control settings-input"
+                       value="{{ labels.col_classes }}"
+                       placeholder="{{ defaults.col_classes }}">
+              </div>
+
+            </div>
+          </div>
+
+          {# ─── مجموعة: مؤشرات الكفاءة ─── #}
+          <div class="settings-group mb-4">
+            <div class="settings-group-title">
+              <i class="fas fa-chart-bar me-2"></i>مؤشرات الكفاءة
+            </div>
+            <div class="row g-3 mt-1">
+
+              <div class="col-md-6">
+                <label class="form-label settings-label">
+                  الكثافة (Density)
+                  <span class="default-badge">{{ defaults.col_density }}</span>
+                </label>
+                <input type="text" name="col_density" class="form-control settings-input"
+                       value="{{ labels.col_density }}"
+                       placeholder="{{ defaults.col_density }}">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label settings-label">
+                  معدل استغلال الفصول (CCR)
+                  <span class="default-badge">{{ defaults.col_CCR }}</span>
+                </label>
+                <input type="text" name="col_CCR" class="form-control settings-input"
+                       value="{{ labels.col_CCR }}"
+                       placeholder="{{ defaults.col_CCR }}">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label settings-label">
+                  نسبة الطلاب للمعلمين (STR)
+                  <span class="default-badge">{{ defaults.col_STR }}</span>
+                </label>
+                <input type="text" name="col_STR" class="form-control settings-input"
+                       value="{{ labels.col_STR }}"
+                       placeholder="{{ defaults.col_STR }}">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label settings-label">
+                  نسبة الطلاب للإداريين (SAR)
+                  <span class="default-badge">{{ defaults.col_SAR }}</span>
+                </label>
+                <input type="text" name="col_SAR" class="form-control settings-input"
+                       value="{{ labels.col_SAR }}"
+                       placeholder="{{ defaults.col_SAR }}">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label settings-label">
+                  نسبة الخدمات المساندة (SSR)
+                  <span class="default-badge">{{ defaults.col_SSR }}</span>
+                </label>
+                <input type="text" name="col_SSR" class="form-control settings-input"
+                       value="{{ labels.col_SSR }}"
+                       placeholder="{{ defaults.col_SSR }}">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label settings-label">
+                  نسبة الطلاب للخدمات التشغيلية (SER)
+                  <span class="default-badge">{{ defaults.col_SER }}</span>
+                </label>
+                <input type="text" name="col_SER" class="form-control settings-input"
+                       value="{{ labels.col_SER }}"
+                       placeholder="{{ defaults.col_SER }}">
+              </div>
+
+            </div>
+          </div>
+
+          {# ─── مجموعة: الكوادر البشرية ─── #}
+          <div class="settings-group mb-4">
+            <div class="settings-group-title">
+              <i class="fas fa-users me-2"></i>أعمدة الكوادر البشرية
+            </div>
+            <div class="row g-3 mt-1">
+
+              <div class="col-md-6">
+                <label class="form-label settings-label">
+                  عمود المعلمين
+                  <span class="default-badge">{{ defaults.col_teachers }}</span>
+                </label>
+                <input type="text" name="col_teachers" class="form-control settings-input"
+                       value="{{ labels.col_teachers }}"
+                       placeholder="{{ defaults.col_teachers }}">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label settings-label">
+                  عمود الإداريين
+                  <span class="default-badge">{{ defaults.col_admins }}</span>
+                </label>
+                <input type="text" name="col_admins" class="form-control settings-input"
+                       value="{{ labels.col_admins }}"
+                       placeholder="{{ defaults.col_admins }}">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label settings-label">
+                  عمود الخدمات المساندة
+                  <span class="default-badge">{{ defaults.col_support }}</span>
+                </label>
+                <input type="text" name="col_support" class="form-control settings-input"
+                       value="{{ labels.col_support }}"
+                       placeholder="{{ defaults.col_support }}">
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label settings-label">
+                  عمود إجمالي الكوادر
+                  <span class="default-badge">{{ defaults.col_staff }}</span>
+                </label>
+                <input type="text" name="col_staff" class="form-control settings-input"
+                       value="{{ labels.col_staff }}"
+                       placeholder="{{ defaults.col_staff }}">
+              </div>
+
+            </div>
+          </div>
+
+          {# ─── مجموعة: الطاقة الاستيعابية – أهلي ─── #}
+          <div class="settings-group mb-4">
+            <div class="settings-group-title">
+              <i class="fas fa-school me-2 text-primary"></i>الطاقة الاستيعابية – المدارس الأهلية
+            </div>
+            <p class="text-muted mb-3" style="font-size:12px;">
+              <i class="fas fa-info-circle me-1 text-primary"></i>
+              عدد الطلاب القياسي لكل فصل في مدارس القطاع الأهلي
+            </p>
+            <div class="row g-3 mt-1">
+              <div class="col-md-4">
+                <label class="form-label settings-label">
+                  التمهيدي (KG)
+                  <span class="default-badge">{{ cap_defaults.private_kg }}</span>
+                </label>
+                <input type="number" name="private_kg" min="1" max="99"
+                       class="form-control settings-input"
+                       value="{{ cap_vals.private_kg }}"
+                       placeholder="{{ cap_defaults.private_kg }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label settings-label">
+                  الابتدائي
+                  <span class="default-badge">{{ cap_defaults.private_primary }}</span>
+                </label>
+                <input type="number" name="private_primary" min="1" max="99"
+                       class="form-control settings-input"
+                       value="{{ cap_vals.private_primary }}"
+                       placeholder="{{ cap_defaults.private_primary }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label settings-label">
+                  الثانوي (متوسط + ثانوي)
+                  <span class="default-badge">{{ cap_defaults.private_high }}</span>
+                </label>
+                <input type="number" name="private_high" min="1" max="99"
+                       class="form-control settings-input"
+                       value="{{ cap_vals.private_high }}"
+                       placeholder="{{ cap_defaults.private_high }}">
+              </div>
+            </div>
+          </div>
+
+          {# ─── مجموعة: الطاقة الاستيعابية – عالمي ─── #}
+          <div class="settings-group mb-4">
+            <div class="settings-group-title">
+              <i class="fas fa-globe me-2 text-info"></i>الطاقة الاستيعابية – المدارس العالمية
+            </div>
+            <p class="text-muted mb-3" style="font-size:12px;">
+              <i class="fas fa-info-circle me-1 text-info"></i>
+              عدد الطلاب القياسي لكل فصل في مدارس القطاع العالمي
+            </p>
+            <div class="row g-3 mt-1">
+              <div class="col-md-4">
+                <label class="form-label settings-label">
+                  التمهيدي (KG)
+                  <span class="default-badge">{{ cap_defaults.intl_kg }}</span>
+                </label>
+                <input type="number" name="intl_kg" min="1" max="99"
+                       class="form-control settings-input"
+                       value="{{ cap_vals.intl_kg }}"
+                       placeholder="{{ cap_defaults.intl_kg }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label settings-label">
+                  الابتدائي
+                  <span class="default-badge">{{ cap_defaults.intl_primary }}</span>
+                </label>
+                <input type="number" name="intl_primary" min="1" max="99"
+                       class="form-control settings-input"
+                       value="{{ cap_vals.intl_primary }}"
+                       placeholder="{{ cap_defaults.intl_primary }}">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label settings-label">
+                  الثانوي (متوسط + ثانوي)
+                  <span class="default-badge">{{ cap_defaults.intl_high }}</span>
+                </label>
+                <input type="number" name="intl_high" min="1" max="99"
+                       class="form-control settings-input"
+                       value="{{ cap_vals.intl_high }}"
+                       placeholder="{{ cap_defaults.intl_high }}">
+              </div>
+            </div>
+          </div>
+
+          {# ─── أزرار ─── #}
+          <div class="d-flex gap-3 justify-content-end mt-2">
+            <button type="button" class="btn btn-outline-secondary" onclick="resetToDefaults()">
+              <i class="fas fa-undo me-1"></i> استعادة الافتراضيات (مؤقت)
+            </button>
+            <button type="submit" class="btn-primary-custom">
+              <i class="fas fa-save me-1"></i> حفظ الإعدادات
+            </button>
+          </div>
+
+        </form>
+
+        {# ─── إعادة الضبط الكاملة ─── #}
+        <form method="POST" action="{{ url_for('reset_labels') }}" class="mt-3"
+              onsubmit="return confirm('سيتم مسح جميع التسميات المخصصة والعودة للقيم الافتراضية. هل أنت متأكد؟')">
+          <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+              <i class="fas fa-trash-restore me-1"></i> مسح التسميات المخصصة والعودة للافتراضيات
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    {# ─── معاينة مباشرة ─── #}
+    <div class="card mb-4">
+      <div class="card-header"><i class="fas fa-eye me-2"></i>معاينة رأس الجدول</div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="efficiency-table" id="previewTable">
+            <thead><tr id="previewRow">
+              <th id="pv_school">{{ labels.col_school }}</th>
+              <th id="pv_students">{{ labels.col_students }}</th>
+              <th id="pv_classes">{{ labels.col_classes }}</th>
+              <th id="pv_density">{{ labels.col_density }}</th>
+              <th id="pv_teachers">{{ labels.col_teachers }}</th>
+              <th id="pv_CCR">{{ labels.col_CCR }}</th>
+              <th id="pv_admins">{{ labels.col_admins }}</th>
+              <th id="pv_STR">{{ labels.col_STR }}</th>
+              <th id="pv_support">{{ labels.col_support }}</th>
+              <th id="pv_SAR">{{ labels.col_SAR }}</th>
+              <th id="pv_staff">{{ labels.col_staff }}</th>
+              <th id="pv_SSR">{{ labels.col_SSR }}</th>
+              <th id="pv_SER">{{ labels.col_SER }}</th>
+            </tr></thead>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.settings-group {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  background: #fafafa;
+}
+.settings-group-title {
+  font-weight: 700;
+  color: #2e7d32;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.settings-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.default-badge {
+  font-size: 11px;
+  background: #e8f5e9;
+  color: #388e3c;
+  border-radius: 6px;
+  padding: 1px 7px;
+  font-weight: 400;
+}
+.settings-input {
+  font-family: 'Cairo', sans-serif;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 1.5px solid #d0d0d0;
+  transition: border-color .2s;
+}
+.settings-input:focus {
+  border-color: #2e7d32;
+  box-shadow: 0 0 0 3px #2e7d3220;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* معاينة فورية عند الكتابة */
+const mapping = {
+  col_school:   'pv_school',
+  col_students: 'pv_students',
+  col_classes:  'pv_classes',
+  col_density:  'pv_density',
+  col_teachers: 'pv_teachers',
+  col_CCR:      'pv_CCR',
+  col_admins:   'pv_admins',
+  col_STR:      'pv_STR',
+  col_support:  'pv_support',
+  col_SAR:      'pv_SAR',
+  col_staff:    'pv_staff',
+  col_SSR:      'pv_SSR',
+  col_SER:      'pv_SER',
+};
+const defaults = {
+  col_school:   "{{ defaults.col_school }}",
+  col_students: "{{ defaults.col_students }}",
+  col_classes:  "{{ defaults.col_classes }}",
+  col_density:  "{{ defaults.col_density }}",
+  col_teachers: "{{ defaults.col_teachers }}",
+  col_CCR:      "{{ defaults.col_CCR }}",
+  col_admins:   "{{ defaults.col_admins }}",
+  col_STR:      "{{ defaults.col_STR }}",
+  col_support:  "{{ defaults.col_support }}",
+  col_SAR:      "{{ defaults.col_SAR }}",
+  col_staff:    "{{ defaults.col_staff }}",
+  col_SSR:      "{{ defaults.col_SSR }}",
+  col_SER:      "{{ defaults.col_SER }}",
+};
+
+document.querySelectorAll('.settings-input').forEach(input => {
+  input.addEventListener('input', () => {
+    const key  = input.name;
+    const pvId = mapping[key];
+    if (pvId) {
+      const th = document.getElementById(pvId);
+      if (th) th.textContent = input.value.trim() || defaults[key];
+    }
+  });
+});
+
+const capDefaults = {
+  private_kg:      {{ cap_defaults.private_kg }},
+  private_primary: {{ cap_defaults.private_primary }},
+  private_high:    {{ cap_defaults.private_high }},
+  intl_kg:         {{ cap_defaults.intl_kg }},
+  intl_primary:    {{ cap_defaults.intl_primary }},
+  intl_high:       {{ cap_defaults.intl_high }},
+};
+
+function resetToDefaults() {
+  if (!confirm('هل تريد إعادة جميع القيم للافتراضية؟')) return;
+  document.querySelectorAll('.settings-input').forEach(input => {
+    if (defaults[input.name] !== undefined) {
+      input.value = defaults[input.name] || '';
+      const pvId = mapping[input.name];
+      if (pvId) {
+        const th = document.getElementById(pvId);
+        if (th) th.textContent = defaults[input.name] || '';
+      }
+    } else if (capDefaults[input.name] !== undefined) {
+      input.value = capDefaults[input.name];
+    }
+  });
+}
+</script>
+{% endblock %}

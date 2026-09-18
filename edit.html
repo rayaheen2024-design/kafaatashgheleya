@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}تعديل مجمع{% endblock %}
+{% block page_title %}تعديل بيانات المجمع{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-md-6">
+  <div class="card"><div class="card-header"><i class="fas fa-edit"></i> تعديل المجمع</div>
+  <div class="card-body">
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label fw-bold">اسم المجمع</label>
+        <input type="text" name="name" class="form-control" value="{{ complex.name }}" required
+               style="border:2px solid #e0e0e0;border-radius:10px;">
+      </div>
+      <div class="mb-4">
+        <label class="form-label fw-bold">الوصف</label>
+        <textarea name="description" class="form-control" rows="3"
+                  style="border:2px solid #e0e0e0;border-radius:10px;">{{ complex.description or '' }}</textarea>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn-primary-custom"><i class="fas fa-save"></i> حفظ التعديلات</button>
+        <a href="{{ url_for('list_complexes') }}" class="btn btn-outline-secondary">إلغاء</a>
+      </div>
+    </form>
+  </div></div>
+</div></div>
+{% endblock %}

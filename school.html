@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}تقرير {{ school.name }}{% endblock %}
+{% block page_title %}تقرير الكفاءة التشغيلية{% endblock %}
+{% block page_subtitle %}{{ school.name }}{% endblock %}
+{% block content %}
+<div class="d-flex gap-2 align-items-center flex-wrap mb-4 no-print">
+  <button onclick="window.print()" class="btn-primary-custom"><i class="fas fa-print me-1"></i> طباعة</button>
+  <a href="{{ url_for('data_entry', sid=school.id) }}" class="btn btn-outline-success"><i class="fas fa-edit me-1"></i> تعديل</a>
+  <a href="{{ url_for('complex_report', cid=school.complex_id) }}" class="btn btn-outline-primary"><i class="fas fa-layer-group me-1"></i> تقرير المجمع</a>
+  <span class="print-option-toggle">
+    <input type="checkbox" id="showWeakPointsSchool" checked onchange="toggleWeakPointsPrint(this)">
+    <label for="showWeakPointsSchool">إظهار نقاط الضعف عند الطباعة</label>
+  </span>
+</div>
+<div class="card mb-4"><div class="card-body p-4 text-center">
+  <h4 class="fw-bold text-success mb-1">تقرير الكفاءة التشغيلية</h4>
+  <h5 class="text-primary mb-1">{{ school.name }}</h5>
+  <p class="text-muted mb-3">{{ school.complex.name }} | {{ grade_data.record_date }}</p>
+  <div class="row g-3">
+    {% for val,label,color in [
+      (metrics.total_students,'الطلاب','#2e7d32'),(metrics.total_classes,'الفصول','#1565c0'),
+      (metrics.total_capacity,'الطاقة','#6a1b9a'),
+      (metrics.avg_density,'متوسط الكثافة','#00838f'),(metrics.general_admin,'الإدارة العامة','#7b1fa2'),
+      (metrics.total_staff,'إجمالي الكوادر','#558b2f')] %}
+    <div class="col-md-2 col-4">
+      <div style="background:{{ color }}12;border-radius:12px;padding:14px;">
+        <div style="font-size:22px;font-weight:900;color:{{ color }};">{{ val }}</div>
+        <div style="font-size:11px;color:#666;">{{ label }}</div>
+      </div>
+    </div>
+    {% endfor %}
+    {# بطاقة الشواغر الحقيقية #}
+    <div class="col-md-2 col-4">
+      <div style="background:#e6510012;border-radius:12px;padding:14px;">
+        <div style="font-size:22px;font-weight:900;color:#e65100;">{{ metrics.total_vacancies }}</div>
+        <div style="font-size:11px;color:#666;">الشواغر</div>
+      </div>
+    </div>
+    {# بطاقة الفائض — تظهر فقط إذا وُجد فائض #}
+    {% if metrics.total_overflow > 0 %}
+    <div class="col-md-2 col-4">
+      <div style="background:#b71c1c18;border-radius:12px;padding:14px;border:1.5px solid #e53935;">
+        <div style="font-size:22px;font-weight:900;color:#b71c1c;">{{ metrics.total_overflow }}</div>
+        <div style="font-size:11px;color:#b71c1c;font-weight:600;">فائض عن الطاقة ⚠️</div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {# تنبيه تفصيلي عند وجود فائض #}
+  {% if metrics.total_overflow > 0 %}
+  <div class="alert alert-danger mt-3 mb-0 text-end" style="border-radius:10px;">
+    <strong>⚠️ تنبيه:</strong>
+    بعض المراحل تجاوزت طاقتها الاستيعابية بمقدار <strong>{{ metrics.total_overflow }} طالب</strong>.
+    الشواغر المعروضة (<strong>{{ metrics.total_vacancies }}</strong>) هي الشواغر الحقيقية في المراحل غير المكتظة فقط،
+    ولا تُلغَى بالفائض الموجود في مراحل أخرى. راجع تفاصيل المراحل أدناه.
+  </div>
+  {% endif %}
+</div></div>
+<div class="card mb-4"><div class="card-header"><i class="fas fa-chart-bar"></i> مؤشرات الكفاءة</div>
+<div class="card-body p-0"><div class="table-responsive">
+  <table class="efficiency-table">
+    <thead><tr>
+      <th>{{ col.col_school }}</th><th>{{ col.col_students }}</th><th>{{ col.col_classes }}</th>
+      <th>{{ col.col_density }}</th><th>{{ col.col_teachers }}</th><th>{{ col.col_CCR }}</th>
+      <th>{{ col.col_admins }}</th><th>{{ col.col_STR }}</th><th>{{ col.col_support }}</th>
+      <th>{{ col.col_SAR }}</th><th>{{ col.col_staff }}</th><th>{{ col.col_SER }}</th>
+    </tr></thead>
+    <tbody><tr>
+      <td class="fw-bold text-start px-3">{{ school.name }}</td>
+      <td>{{ metrics.total_students }}</td><td>{{ metrics.total_classes }}</td>
+      <td><span class="ratio-cell ratio-{{ metrics.density_status }}">{{ metrics.avg_density }}</span></td>
+      <td>{{ metrics.teachers }}</td>
+      <td><span class="ratio-cell ratio-{{ metrics.CCR_status }}">{{ metrics.CCR }}</span></td>
+      <td>{{ metrics.admins }}</td>
+      <td><span class="ratio-cell ratio-{{ metrics.STR_status }}">{{ metrics.STR }}</span></td>
+      <td>{{ metrics.support_staff }}</td>
+      <td><span class="ratio-cell ratio-{{ metrics.SAR_status }}">{{ metrics.SAR }}</span></td>
+      <td>{{ metrics.total_staff }}</td>
+      <td><span class="ratio-cell ratio-{{ metrics.SER_status }}">{{ metrics.SER }}</span></td>
+    </tr></tbody>
+  </table>
+</div></div></div>
+<div class="card mb-4"><div class="card-header"><i class="fas fa-list"></i> تفاصيل المراحل</div>
+<div class="card-body p-0"><div class="table-responsive">
+  <table class="efficiency-table">
+    <thead><tr><th>المرحلة</th><th>الفصول</th><th>الطلاب</th><th>الطاقة</th><th>الشواغر</th><th>الكثافة</th><th>الامتلاء</th></tr></thead>
+    <tbody>
+    {% for g in metrics.grade_details %}{% if g.classes > 0 %}
+    <tr>
+      <td class="fw-bold text-start px-3">{{ g.grade }}</td>
+      <td>{{ g.classes }}</td><td>{{ g.students }}</td><td>{{ g.capacity }}</td>
+      <td>
+        {% if g.vacancies > 0 %}
+          <span class="ratio-cell ratio-good">{{ g.vacancies }} شاغر</span>
+        {% elif g.vacancies < 0 %}
+          <span class="ratio-cell ratio-bad">فائض {{ g.vacancies * -1 }} ⚠️</span>
+        {% else %}
+          <span class="ratio-cell ratio-warn">مكتمل</span>
+        {% endif %}
+      </td>
+      <td><span class="ratio-cell {{ 'ratio-good' if g.avg_per_class>=24 else ('ratio-warn' if g.avg_per_class>=18 else 'ratio-bad') }}">{{ g.avg_per_class }}</span></td>
+      <td style="min-width:120px;">
+        {% set pct = ((g.students/g.capacity*100)|round(1)) if g.capacity>0 else 0 %}
+        <div class="d-flex align-items-center gap-2">
+          <div class="fill-bar flex-grow-1">
+            <div class="fill-bar-inner {{ 'good' if pct>=85 else ('warning' if pct>=60 else 'danger') }}" style="width:{{ pct if pct <= 100 else 100 }}%"></div>
+          </div><small>{{ pct }}%</small>
+        </div>
+      </td>
+    </tr>
+    {% endif %}{% endfor %}
+    <tr style="background:#fff9e6;font-weight:700;">
+      <td class="fw-bold text-start px-3">الإجمالي</td>
+      <td>{{ metrics.total_classes }}</td><td>{{ metrics.total_students }}</td><td>{{ metrics.total_capacity }}</td>
+      <td>
+        <span class="ratio-cell {{ 'ratio-good' if metrics.total_vacancies>0 else 'ratio-warn' }}">{{ metrics.total_vacancies }} شاغر</span>
+        {% if metrics.total_overflow > 0 %}
+        <br><span class="ratio-cell ratio-bad" style="font-size:11px;">فائض {{ metrics.total_overflow }} ⚠️</span>
+        {% endif %}
+      </td>
+      <td><span class="ratio-cell {{ 'ratio-good' if metrics.avg_density>=24 else ('ratio-warn' if metrics.avg_density>=18 else 'ratio-bad') }}">{{ metrics.avg_density }}</span></td>
+      <td>
+        {% set tp = ((metrics.total_students/metrics.total_capacity*100)|round(1)) if metrics.total_capacity>0 else 0 %}
+        <div class="d-flex align-items-center gap-2">
+          <div class="fill-bar flex-grow-1"><div class="fill-bar-inner good" style="width:{{ tp if tp <= 100 else 100 }}%"></div></div>
+          <small>{{ tp }}%</small>
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+</div></div></div>
+{% if metrics.weak_points %}
+<div class="card mb-4 weak-points-section">
+  <div class="card-header" style="background:linear-gradient(135deg,#b71c1c,#e53935);">
+    <i class="fas fa-exclamation-triangle"></i> نقاط الضعف
+  </div>
+  <div class="card-body">
+    {% for wp in metrics.weak_points %}
+    <div class="weak-point">
+      <div class="weak-icon"><i class="fas fa-times"></i></div>
+      <div class="weak-info">
+        <h6>{{ wp.title }}</h6><p>{{ wp.description }}</p>
+        <small class="text-danger fw-bold">القيمة: {{ wp.value }} | المعيار: ≥ {{ wp.standard }}</small>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="card mb-4"><div class="card-body text-center py-4">
+  <i class="fas fa-check-circle fa-3x text-success mb-2 d-block"></i>
+  <h5 class="text-success fw-bold">جميع المؤشرات ضمن المعايير ✅</h5>
+</div></div>
+{% endif %}
+{% endblock %}

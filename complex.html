@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}تقرير مجمع {{ complex.name }}{% endblock %}
+{% block page_title %}تقرير الكفاءة - المجمع{% endblock %}
+{% block page_subtitle %}{{ complex.name }}{% endblock %}
+{% block content %}
+<div class="d-flex gap-2 align-items-center flex-wrap mb-4 no-print">
+  <button onclick="window.print()" class="btn-primary-custom"><i class="fas fa-print me-1"></i> طباعة</button>
+  <a href="{{ url_for('company_report') }}" class="btn btn-outline-primary"><i class="fas fa-globe me-1"></i> تقرير الشركة</a>
+  <span class="print-option-toggle">
+    <input type="checkbox" id="showWeakPointsComplex" onchange="toggleWeakPointsPrint(this)">
+    <label for="showWeakPointsComplex">إظهار نقاط الضعف عند الطباعة</label>
+  </span>
+</div>
+<script>document.body.classList.add("hide-weak-points");</script>
+<div class="card mb-4"><div class="card-body text-center py-4">
+  <h4 class="fw-bold text-success">تقرير الكفاءة التشغيلية</h4>
+  <h5 class="text-primary mb-1">{{ complex.name }}</h5>
+  <p class="text-muted">{{ metrics.schools|length }} مدرسة</p>
+  <div class="row g-3 mt-1">
+    {% for val,label,color in [
+      (metrics.total_students,'الطلاب','#2e7d32'),(metrics.total_classes,'الفصول','#1565c0'),
+      (metrics.teachers,'المعلمين','#6a1b9a'),(metrics.admins,'الإداريين','#e65100'),
+      (metrics.support_staff,'الخدمات','#00838f'),(metrics.general_admin,'الإدارة العامة','#7b1fa2'),
+      (metrics.total_staff,'إجمالي الكوادر','#558b2f')] %}
+    <div class="col-md-2 col-4">
+      <div style="background:{{ color }}12;border-radius:12px;padding:14px;">
+        <div style="font-size:22px;font-weight:900;color:{{ color }};">{{ val }}</div>
+        <div style="font-size:11px;color:#666;">{{ label }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div></div>
+<div class="card mb-4"><div class="card-header"><i class="fas fa-table"></i> مؤشرات كل مدرسة</div>
+<div class="card-body p-0"><div class="table-responsive">
+  <table class="efficiency-table">
+    <thead><tr>
+      <th>#</th><th>{{ col.col_school }}</th><th>{{ col.col_students }}</th><th>{{ col.col_classes }}</th>
+      <th>{{ col.col_density }}</th><th>{{ col.col_CCR }}</th><th>{{ col.col_STR }}</th><th>{{ col.col_SAR }}</th><th>{{ col.col_SER }}</th><th>تقرير</th>
+    </tr></thead>
+    <tbody>
+    {% for item in metrics.schools %}{% set m=item.metrics %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td class="fw-bold text-start px-3">{{ item.school.name }}</td>
+      <td>{{ m.total_students }}</td><td>{{ m.total_classes }}</td>
+      <td><span class="ratio-cell ratio-{{ m.density_status }}">{{ m.avg_density }}</span></td>
+      <td><span class="ratio-cell ratio-{{ m.CCR_status }}">{{ m.CCR }}</span></td>
+      <td><span class="ratio-cell ratio-{{ m.STR_status }}">{{ m.STR }}</span></td>
+      <td><span class="ratio-cell ratio-{{ m.SAR_status }}">{{ m.SAR }}</span></td>
+      <td><span class="ratio-cell ratio-{{ m.SER_status }}">{{ m.SER }}</span></td>
+      <td><a href="{{ url_for('school_report', sid=item.school.id) }}" class="btn-report"><i class="fas fa-chart-bar"></i></a></td>
+    </tr>
+    {% endfor %}
+    <tr style="background:#e8f5e9;font-weight:900;font-size:14px;">
+      <td colspan="2" class="text-start px-3">إجمالي المجمع</td>
+      <td>{{ metrics.total_students }}</td><td>{{ metrics.total_classes }}</td>
+      <td><span class="ratio-cell ratio-{{ metrics.density_status }}">{{ metrics.avg_density }}</span></td>
+      <td><span class="ratio-cell ratio-{{ metrics.CCR_status }}">{{ metrics.CCR }}</span></td>
+      <td><span class="ratio-cell ratio-{{ metrics.STR_status }}">{{ metrics.STR }}</span></td>
+      <td><span class="ratio-cell ratio-{{ metrics.SAR_status }}">{{ metrics.SAR }}</span></td>
+      <td><span class="ratio-cell ratio-{{ metrics.SER_status }}">{{ metrics.SER }}</span></td>
+      <td>-</td>
+    </tr>
+    </tbody>
+  </table>
+</div></div></div>
+
+{# ===== نقاط الضعف لجميع مدارس المجمع ===== #}
+{% set has_any_weak = [] %}
+{% for item in metrics.schools %}
+  {% if item.metrics.weak_points %}
+    {% set _ = has_any_weak.append(1) %}
+  {% endif %}
+{% endfor %}
+
+{% if has_any_weak %}
+<div class="card mb-4 weak-points-section">
+  <div class="card-header" style="background:linear-gradient(135deg,#b71c1c,#e53935);color:#fff;">
+    <i class="fas fa-exclamation-triangle me-2"></i> نقاط الضعف - جميع مدارس المجمع
+  </div>
+  <div class="card-body">
+    {% for item in metrics.schools %}
+      {% set m = item.metrics %}
+      {% if m.weak_points %}
+      <div class="mb-4">
+        <h6 class="fw-bold text-primary border-bottom pb-2 mb-3">
+          <i class="fas fa-school me-1"></i> {{ item.school.name }}
+        </h6>
+        {% for wp in m.weak_points %}
+        <div class="weak-point">
+          <div class="weak-icon"><i class="fas fa-times"></i></div>
+          <div class="weak-info">
+            <h6>{{ wp.title }}</h6><p>{{ wp.description }}</p>
+            <small class="text-danger fw-bold">القيمة: {{ wp.value }} | المعيار: ≥ {{ wp.standard }}</small>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="card mb-4"><div class="card-body text-center py-4">
+  <i class="fas fa-check-circle fa-3x text-success mb-2 d-block"></i>
+  <h5 class="text-success fw-bold">جميع مدارس المجمع ضمن المعايير ✅</h5>
+</div></div>
+{% endif %}
+
+{% endblock %}

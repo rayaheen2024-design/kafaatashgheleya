@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}إدخال البيانات - {{ school.name }}{% endblock %}
+{% block page_title %}إدخال بيانات المدرسة{% endblock %}
+{% block page_subtitle %}{{ school.name }} — {{ school.complex.name }}{% endblock %}
+{% block content %}
+<form method="POST">
+<div class="totals-bar mb-4">
+  <div class="row g-2 text-center">
+    {% for id,label in [('totalClassesDisplay','الفصول'),('totalStudentsDisplay','الطلاب'),
+       ('totalCapacityDisplay','الطاقة'),('totalVacanciesDisplay','الشواغر'),('avgDensityDisplay','متوسط الكثافة')] %}
+    <div class="col"><div class="total-num" id="{{ id }}">0</div><div class="total-lbl">{{ label }}</div></div>
+    {% endfor %}
+  </div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card"><div class="card-header"><i class="fas fa-chalkboard"></i> الفصول والطلاب</div>
+    <div class="card-body">
+      <div class="mb-4">
+        <label class="form-label fw-bold text-success">📅 تاريخ التسجيل</label>
+        <input type="date" name="record_date" class="form-control" value="{{ today }}" required
+               style="max-width:200px;border:2px solid #c8e6c9;border-radius:10px;">
+      </div>
+      <div class="section-title">🌱 رياض الأطفال — سعة الفصل: 20</div>
+      {% for label,key in [('KG1','kg1'),('KG2','kg2'),('KG3','kg3')] %}
+      {% set pc = latest_grade.grades[label].classes if latest_grade else 0 %}
+      {% set ps = latest_grade.grades[label].students if latest_grade else 0 %}
+      <div class="input-grade-row d-flex align-items-center gap-3 flex-wrap">
+        <span class="grade-label">{{ label }}</span>
+        <span class="capacity-badge">20 طالب/فصل</span>
+        <div class="d-flex align-items-center gap-1"><small class="text-muted">فصول:</small>
+          <input type="number" name="{{ key }}_classes" class="form-control-sm-custom grade-classes"
+                 data-capacity="20" min="0" value="{{ pc }}"></div>
+        <div class="d-flex align-items-center gap-1"><small class="text-muted">طلاب:</small>
+          <input type="number" name="{{ key }}_students" class="form-control-sm-custom grade-students"
+                 min="0" value="{{ ps }}"></div>
+        <div class="d-flex align-items-center gap-2 me-auto">
+          <small class="text-muted">طاقة:</small>
+          <span class="fw-bold text-primary" id="cap_{{ key }}">0</span>
+          <span class="vacancy-badge vacancy-positive" id="vac_{{ key }}">-</span>
+        </div>
+      </div>
+      {% endfor %}
+      <div class="section-title mt-3">📚 ابتدائي — سعة الفصل: 24</div>
+      {% for label,key in [('أولى ابتدائي','grade1'),('ثاني ابتدائي','grade2'),('ثالث ابتدائي','grade3'),
+         ('رابع ابتدائي','grade4'),('خامس ابتدائي','grade5'),('سادس ابتدائي','grade6')] %}
+      {% set pc = latest_grade.grades[label].classes if latest_grade else 0 %}
+      {% set ps = latest_grade.grades[label].students if latest_grade else 0 %}
+      <div class="input-grade-row d-flex align-items-center gap-3 flex-wrap">
+        <span class="grade-label">{{ label }}</span>
+        <span class="capacity-badge">24 طالب/فصل</span>
+        <div class="d-flex align-items-center gap-1"><small class="text-muted">فصول:</small>
+          <input type="number" name="{{ key }}_classes" class="form-control-sm-custom grade-classes"
+                 data-capacity="24" min="0" value="{{ pc }}"></div>
+        <div class="d-flex align-items-center gap-1"><small class="text-muted">طلاب:</small>
+          <input type="number" name="{{ key }}_students" class="form-control-sm-custom grade-students"
+                 min="0" value="{{ ps }}"></div>
+        <div class="d-flex align-items-center gap-2 me-auto">
+          <small class="text-muted">طاقة:</small>
+          <span class="fw-bold text-primary" id="cap_{{ key }}">0</span>
+          <span class="vacancy-badge vacancy-positive" id="vac_{{ key }}">-</span>
+        </div>
+      </div>
+      {% endfor %}
+      <div class="section-title mt-3">🎓 متوسط — سعة الفصل: 24</div>
+      {% for label,key in [('أول متوسط','middle1'),('ثاني متوسط','middle2'),('ثالث متوسط','middle3')] %}
+      {% set pc = latest_grade.grades[label].classes if latest_grade else 0 %}
+      {% set ps = latest_grade.grades[label].students if latest_grade else 0 %}
+      <div class="input-grade-row d-flex align-items-center gap-3 flex-wrap">
+        <span class="grade-label">{{ label }}</span>
+        <span class="capacity-badge">24 طالب/فصل</span>
+        <div class="d-flex align-items-center gap-1"><small class="text-muted">فصول:</small>
+          <input type="number" name="{{ key }}_classes" class="form-control-sm-custom grade-classes"
+                 data-capacity="24" min="0" value="{{ pc }}"></div>
+        <div class="d-flex align-items-center gap-1"><small class="text-muted">طلاب:</small>
+          <input type="number" name="{{ key }}_students" class="form-control-sm-custom grade-students"
+                 min="0" value="{{ ps }}"></div>
+        <div class="d-flex align-items-center gap-2 me-auto">
+          <small class="text-muted">طاقة:</small>
+          <span class="fw-bold text-primary" id="cap_{{ key }}">0</span>
+          <span class="vacancy-badge vacancy-positive" id="vac_{{ key }}">-</span>
+        </div>
+      </div>
+      {% endfor %}
+      <div class="section-title mt-3">🏛️ ثانوي — سعة الفصل: 30</div>
+      {% for label,key in [('أول ثانوي','high1'),('ثاني ثانوي','high2'),('ثالث ثانوي','high3')] %}
+      {% set pc = latest_grade.grades[label].classes if latest_grade else 0 %}
+      {% set ps = latest_grade.grades[label].students if latest_grade else 0 %}
+      <div class="input-grade-row d-flex align-items-center gap-3 flex-wrap">
+        <span class="grade-label">{{ label }}</span>
+        <span class="capacity-badge">30 طالب/فصل</span>
+        <div class="d-flex align-items-center gap-1"><small class="text-muted">فصول:</small>
+          <input type="number" name="{{ key }}_classes" class="form-control-sm-custom grade-classes"
+                 data-capacity="30" min="0" value="{{ pc }}"></div>
+        <div class="d-flex align-items-center gap-1"><small class="text-muted">طلاب:</small>
+          <input type="number" name="{{ key }}_students" class="form-control-sm-custom grade-students"
+                 min="0" value="{{ ps }}"></div>
+        <div class="d-flex align-items-center gap-2 me-auto">
+          <small class="text-muted">طاقة:</small>
+          <span class="fw-bold text-primary" id="cap_{{ key }}">0</span>
+          <span class="vacancy-badge vacancy-positive" id="vac_{{ key }}">-</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div></div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card mb-3"><div class="card-header"><i class="fas fa-users"></i> الكوادر البشرية</div>
+    <div class="card-body">
+      {% for field,label,icon,color,std in [
+        ('teachers','المعلمين','chalkboard-teacher','#2e7d32',14),
+        ('admins','الإداريين','user-tie','#1565c0',50),
+        ('support_staff','الخدمات المساندة','hands-helping','#e65100',90)] %}
+      <div class="mb-3">
+        <label class="form-label fw-bold" style="font-size:13px;">
+          <i class="fas fa-{{ icon }} me-1" style="color:{{ color }};"></i>{{ label }}
+        </label>
+        <div class="d-flex gap-2 align-items-center">
+          <input type="number" name="{{ field }}" id="input_{{ field }}"
+                 class="form-control staff-input" min="0"
+                 value="{{ latest_staff[field] if latest_staff else 0 }}"
+                 style="border:2px solid #e0e0e0;border-radius:10px;">
+          <span class="badge" style="background:{{ color }}20;color:{{ color }};font-size:10px;white-space:nowrap;">معيار ≥ {{ std }}</span>
+        </div>
+      </div>
+      {% endfor %}
+      <div class="mb-3">
+        <label class="form-label fw-bold" style="font-size:13px;">
+          <i class="fas fa-user-shield me-1" style="color:#7b1fa2;"></i>الإدارة العامة
+        </label>
+        <div class="d-flex gap-2 align-items-center">
+          <input type="number" class="form-control" value="{{ general_admin_share }}" disabled
+                 style="border:2px solid #ce93d8;border-radius:10px;background:#f3e5f5;color:#7b1fa2;font-weight:700;max-width:90px;">
+          <span class="badge" style="background:#7b1fa220;color:#7b1fa2;font-size:10px;white-space:nowrap;">
+            5 ÷ {{ schools_in_complex }} مدرسة
+          </span>
+        </div>
+        <small class="text-muted d-block mt-1" style="font-size:11px;">
+          <i class="fas fa-info-circle me-1"></i>
+          محسوب تلقائياً: 5 موظفي إدارة عامة مقسَّمون على مدارس المجمع
+        </small>
+      </div>
+      <div class="mb-2">
+        <label class="form-label fw-bold" style="font-size:13px;">ملاحظات</label>
+        <textarea name="notes" class="form-control" rows="2"
+                  style="border:2px solid #e0e0e0;border-radius:10px;font-size:13px;">{{ latest_staff.notes if latest_staff else '' }}</textarea>
+      </div>
+    </div></div>
+    <div class="card mb-3"><div class="card-header"><i class="fas fa-tachometer-alt"></i> النسب اللحظية</div>
+    <div class="card-body">
+      {% for key,label,std in [('CCR','طلاب / معلمين','14'),('STR','طلاب / إداريين','50'),
+         ('SAR','طلاب / خدمات','90'),('SER','طلاب / إجمالي','10')] %}
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div><div style="font-size:12px;font-weight:700;color:#555;">{{ label }}</div>
+             <div style="font-size:10px;color:#999;">المعيار: ≥ {{ std }}</div></div>
+        <span class="ratio-cell ratio-warn" id="ratio_{{ key }}">-</span>
+      </div>
+      {% endfor %}
+    </div></div>
+    <button type="submit" class="btn-primary-custom w-100 py-3 fs-6 mb-2">
+      <i class="fas fa-save me-2"></i> حفظ البيانات
+    </button>
+    <a href="{{ url_for('school_report', sid=school.id) }}" class="btn btn-outline-success w-100 py-2">
+      <i class="fas fa-chart-bar me-1"></i> عرض التقرير
+    </a>
+  </div>
+</div>
+</form>
+{% endblock %}
