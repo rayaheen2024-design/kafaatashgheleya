@@ -70,16 +70,6 @@
 
               <div class="col-md-6">
                 <label class="form-label settings-label">
-                  الكثافة (Density)
-                  <span class="default-badge">{{ defaults.col_density }}</span>
-                </label>
-                <input type="text" name="col_density" class="form-control settings-input"
-                       value="{{ labels.col_density }}"
-                       placeholder="{{ defaults.col_density }}">
-              </div>
-
-              <div class="col-md-6">
-                <label class="form-label settings-label">
                   معدل استغلال الفصول (CCR)
                   <span class="default-badge">{{ defaults.col_CCR }}</span>
                 </label>
@@ -301,7 +291,6 @@
               <th id="pv_school">{{ labels.col_school }}</th>
               <th id="pv_students">{{ labels.col_students }}</th>
               <th id="pv_classes">{{ labels.col_classes }}</th>
-              <th id="pv_density">{{ labels.col_density }}</th>
               <th id="pv_teachers">{{ labels.col_teachers }}</th>
               <th id="pv_CCR">{{ labels.col_CCR }}</th>
               <th id="pv_admins">{{ labels.col_admins }}</th>
@@ -374,7 +363,6 @@ const mapping = {
   col_school:   'pv_school',
   col_students: 'pv_students',
   col_classes:  'pv_classes',
-  col_density:  'pv_density',
   col_teachers: 'pv_teachers',
   col_CCR:      'pv_CCR',
   col_admins:   'pv_admins',
@@ -389,7 +377,6 @@ const defaults = {
   col_school:   "{{ defaults.col_school }}",
   col_students: "{{ defaults.col_students }}",
   col_classes:  "{{ defaults.col_classes }}",
-  col_density:  "{{ defaults.col_density }}",
   col_teachers: "{{ defaults.col_teachers }}",
   col_CCR:      "{{ defaults.col_CCR }}",
   col_admins:   "{{ defaults.col_admins }}",

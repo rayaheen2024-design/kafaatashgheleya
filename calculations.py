@@ -8,7 +8,7 @@ GRADE_CAPACITY = {
     "أول ثانوي": 30, "ثاني ثانوي": 30, "ثالث ثانوي": 30,
 }
 
-STANDARDS = {"CCR": 14, "STR": 50, "SAR": 90, "SER": 10, "density": 24}
+STANDARDS = {"CCR": 24, "STR": 14, "SAR": 50, "SSR": 90, "SER": 10, "density": 24}
 
 # ─── الطاقة الافتراضية مقسّمة حسب نوع المدرسة والمرحلة ───
 DEFAULT_CAPACITY_PRIVATE = {

@@ -74,10 +74,10 @@ def reset_labels():
 
 
 def latest_grade(sid):
-    return GradeData.query.filter_by(school_id=sid).order_by(GradeData.record_date.desc()).first()
+    return GradeData.query.filter_by(school_id=sid).order_by(GradeData.record_date.desc(), GradeData.id.desc()).first()
 
 def latest_staff(sid):
-    return StaffRecord.query.filter_by(school_id=sid).order_by(StaffRecord.record_date.desc()).first()
+    return StaffRecord.query.filter_by(school_id=sid).order_by(StaffRecord.record_date.desc(), StaffRecord.id.desc()).first()
 
 def _int(f, k):
     try: return int(f.get(k, 0) or 0)
@@ -158,7 +158,9 @@ def data_entry(sid):
     if request.method == "POST":
         rd = datetime.strptime(request.form.get("record_date"),"%Y-%m-%d").date()
         f  = request.form
-        gd = GradeData(school_id=sid, record_date=rd,
+        # تحديث السجل إن وُجد لنفس اليوم، وإلا إنشاء جديد
+        gd = GradeData.query.filter_by(school_id=sid, record_date=rd).first()
+        grade_fields = dict(
             kg1_classes=_int(f,"kg1_classes"), kg1_students=_int(f,"kg1_students"),
             kg2_classes=_int(f,"kg2_classes"), kg2_students=_int(f,"kg2_students"),
             kg3_classes=_int(f,"kg3_classes"), kg3_students=_int(f,"kg3_students"),
@@ -174,29 +176,30 @@ def data_entry(sid):
             high1_classes=_int(f,"high1_classes"), high1_students=_int(f,"high1_students"),
             high2_classes=_int(f,"high2_classes"), high2_students=_int(f,"high2_students"),
             high3_classes=_int(f,"high3_classes"), high3_students=_int(f,"high3_students"))
-        # حساب الإدارة العامة: 5 موظفين لكل مجمع مقسّمة على عدد مدارسه
-        import math
-        _schools_count = School.query.filter_by(complex_id=school.complex_id, is_active=True).count() if school.complex_id else 1
-        _schools_count = max(_schools_count, 1)
-        _general_admin_val = math.floor(5 / _schools_count)
-        sr = StaffRecord(school_id=sid, record_date=rd,
+        if gd:
+            for k, v in grade_fields.items(): setattr(gd, k, v)
+        else:
+            gd = GradeData(school_id=sid, record_date=rd, **grade_fields)
+            db.session.add(gd)
+        sr = StaffRecord.query.filter_by(school_id=sid, record_date=rd).first()
+        staff_fields = dict(
             teachers=_int(f,"teachers"), admins=_int(f,"admins"),
             support_staff=_int(f,"support_staff"),
-            general_admin=_general_admin_val,
+            general_admin=_int(f,"general_admin"),
             notes=f.get("notes",""))
-        db.session.add(gd); db.session.add(sr); db.session.commit()
+        if sr:
+            for k, v in staff_fields.items(): setattr(sr, k, v)
+        else:
+            sr = StaffRecord(school_id=sid, record_date=rd, **staff_fields)
+            db.session.add(sr)
+        db.session.commit()
         flash("تم حفظ البيانات بنجاح ✅","success")
         return redirect(url_for("school_report", sid=sid))
     lg = latest_grade(sid); ls = latest_staff(sid)
-    import math as _math
-    _cplx_count = School.query.filter_by(complex_id=school.complex_id, is_active=True).count() if school.complex_id else 1
-    _cplx_count = max(_cplx_count, 1)
-    _ga_share = _math.floor(5 / _cplx_count)
     return render_template("data_entry.html", school=school,
         latest_grade=lg.to_dict() if lg else None,
         latest_staff=ls.to_dict() if ls else None,
-        today=date.today().isoformat(), GRADE_CAPACITY=GRADE_CAPACITY,
-        general_admin_share=_ga_share, schools_in_complex=_cplx_count)
+        today=date.today().isoformat(), GRADE_CAPACITY=GRADE_CAPACITY)
 
 @app.route("/api/vacancies", methods=["POST"])
 def api_vacancies():
@@ -273,13 +276,17 @@ def import_excel():
 
                 school = School.query.filter_by(name=sname, complex_id=row_cid).first()
                 if not school:
-                    school = School(name=sname, complex_id=row_cid, school_type=str(row.get("النوع","بنين")))
+                    school = School(name=sname, complex_id=row_cid,
+                                    school_type=str(row.get("النوع","بنين")),
+                                    school_level=str(row.get("مستوى المدرسة","") or ""))
                     db.session.add(school)
                     db.session.flush()
                 def rv(c): 
                     try: return int(row.get(c,0) or 0)
                     except: return 0
-                db.session.add(GradeData(school_id=school.id, record_date=rd,
+                # GradeData — تحديث إن وُجد لنفس اليوم
+                gd_existing = GradeData.query.filter_by(school_id=school.id, record_date=rd).first()
+                grade_vals = dict(
                     kg1_classes=rv("KG1_فصول"), kg1_students=rv("KG1_طلاب"),
                     kg2_classes=rv("KG2_فصول"), kg2_students=rv("KG2_طلاب"),
                     kg3_classes=rv("KG3_فصول"), kg3_students=rv("KG3_طلاب"),
@@ -294,14 +301,22 @@ def import_excel():
                     middle3_classes=rv("ثالث_متوسط_فصول"), middle3_students=rv("ثالث_متوسط_طلاب"),
                     high1_classes=rv("أول_ثانوي_فصول"), high1_students=rv("أول_ثانوي_طلاب"),
                     high2_classes=rv("ثاني_ثانوي_فصول"), high2_students=rv("ثاني_ثانوي_طلاب"),
-                    high3_classes=rv("ثالث_ثانوي_فصول"), high3_students=rv("ثالث_ثانوي_طلاب")))
-                import math as _imath
-                _ischools = School.query.filter_by(complex_id=school.complex_id, is_active=True).count() if school.complex_id else 1
-                _ischools = max(_ischools, 1)
-                db.session.add(StaffRecord(school_id=school.id, record_date=rd,
+                    high3_classes=rv("ثالث_ثانوي_فصول"), high3_students=rv("ثالث_ثانوي_طلاب"))
+                if gd_existing:
+                    for k, v in grade_vals.items(): setattr(gd_existing, k, v)
+                else:
+                    db.session.add(GradeData(school_id=school.id, record_date=rd, **grade_vals))
+                # StaffRecord — تحديث إن وُجد لنفس اليوم
+                sr_existing = StaffRecord.query.filter_by(school_id=school.id, record_date=rd).first()
+                staff_vals = dict(
                     teachers=rv("المعلمين"), admins=rv("الإداريين"),
                     support_staff=rv("الخدمات_المساندة"),
-                    general_admin=_imath.floor(5 / _ischools)))
+                    general_admin=rv("الإدارة_العامة"),
+                    notes=str(row.get("ملاحظات","") or ""))
+                if sr_existing:
+                    for k, v in staff_vals.items(): setattr(sr_existing, k, v)
+                else:
+                    db.session.add(StaffRecord(school_id=school.id, record_date=rd, **staff_vals))
                 count += 1
             db.session.commit()
             flash(f"تم استيراد {count} مدرسة بنجاح ✅","success")

@@ -54,10 +54,11 @@ function recalcAll() {
   s("totalCapacityDisplay", tcp.toLocaleString("ar"));
   s("totalVacanciesDisplay",tv);
   s("avgDensityDisplay",    ad);
-  const teachers = parseInt(document.getElementById("input_teachers")?.value)      || 0;
-  const admins   = parseInt(document.getElementById("input_admins")?.value)        || 0;
-  const support  = parseInt(document.getElementById("input_support_staff")?.value) || 0;
-  const total    = teachers + admins + support;
+  const teachers     = parseInt(document.getElementById("input_teachers")?.value)      || 0;
+  const admins       = parseInt(document.getElementById("input_admins")?.value)        || 0;
+  const support      = parseInt(document.getElementById("input_support_staff")?.value) || 0;
+  const generalAdmin = parseInt(document.querySelector("input[name='general_admin']")?.value) || 0;
+  const total    = teachers + admins + support + generalAdmin;
   const ratios   = {
     CCR: teachers>0 ? (ts/teachers).toFixed(2) : 0,
     STR: admins>0   ? (ts/admins  ).toFixed(2) : 0,
@@ -71,6 +72,6 @@ function recalcAll() {
     el.className   = `ratio-cell ${parseFloat(v) >= STANDARDS[k] ? "ratio-good" : "ratio-bad"}`;
   });
 }
-document.querySelectorAll(".grade-classes,.grade-students,.staff-input")
+document.querySelectorAll(".grade-classes,.grade-students,.staff-input,input[name='general_admin']")
         .forEach(el => el.addEventListener("input", recalcAll));
 if (document.querySelector(".grade-classes")) recalcAll();

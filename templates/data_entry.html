@@ -129,15 +129,13 @@
           <i class="fas fa-user-shield me-1" style="color:#7b1fa2;"></i>الإدارة العامة
         </label>
         <div class="d-flex gap-2 align-items-center">
-          <input type="number" class="form-control" value="{{ general_admin_share }}" disabled
-                 style="border:2px solid #ce93d8;border-radius:10px;background:#f3e5f5;color:#7b1fa2;font-weight:700;max-width:90px;">
-          <span class="badge" style="background:#7b1fa220;color:#7b1fa2;font-size:10px;white-space:nowrap;">
-            5 ÷ {{ schools_in_complex }} مدرسة
-          </span>
+          <input type="number" name="general_admin" class="form-control" min="0"
+                 value="{{ latest_staff.general_admin if latest_staff else 0 }}"
+                 style="border:2px solid #ce93d8;border-radius:10px;color:#7b1fa2;font-weight:700;max-width:90px;">
         </div>
         <small class="text-muted d-block mt-1" style="font-size:11px;">
           <i class="fas fa-info-circle me-1"></i>
-          محسوب تلقائياً: 5 موظفي إدارة عامة مقسَّمون على مدارس المجمع
+          أدخل عدد موظفي الإدارة العامة المخصصين لهذه المدرسة
         </small>
       </div>
       <div class="mb-2">
