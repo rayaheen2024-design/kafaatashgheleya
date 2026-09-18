@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}استيراد إكسيل{% endblock %}
+{% block page_title %}استيراد البيانات من إكسيل{% endblock %}
+{% block content %}
+<div class="row g-4">
+
+  {# ── بطاقة تحميل القالب ── #}
+  <div class="col-12">
+    <div class="card border-0 shadow-sm" style="background:linear-gradient(135deg,#e8f5e9,#f1f8e9);">
+      <div class="card-body d-flex align-items-center gap-3 flex-wrap">
+        <div>
+          <h6 class="mb-1 fw-bold text-success"><i class="fas fa-file-download me-1"></i> الخطوة الأولى: حمّل القالب</h6>
+          <p class="mb-0 text-muted" style="font-size:13px;">
+            حمّل القالب الجاهز، عبّئه ببيانات المدارس، ثم ارفعه أدناه.
+          </p>
+        </div>
+        <a href="{{ url_for('download_template') }}"
+           id="downloadTemplateLink"
+           class="btn btn-success ms-auto"
+           style="border-radius:10px; padding:10px 24px; font-size:14px;">
+          <i class="fas fa-download me-2"></i> تحميل قالب Excel
+        </a>
+      </div>
+    </div>
+  </div>
+
+  {# ── بطاقة رفع الملف ── #}
+  <div class="col-md-6">
+    <div class="card"><div class="card-header"><i class="fas fa-upload"></i> الخطوة الثانية: رفع الملف المعبّأ</div>
+    <div class="card-body">
+      <form method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label class="form-label fw-bold">المجمع <span class="text-muted fw-normal">(اختياري إن كان القالب يحمل اسم المجمع تلقائياً)</span></label>
+          <select name="complex_id" id="complexSelect" class="form-select" style="border:2px solid #e0e0e0;border-radius:10px;">
+            <option value="">-- بدون تحديد (استخدم اسم المجمع المضمّن في القالب) --</option>
+            {% for cx in complexes %}<option value="{{ cx.id }}">{{ cx.name }}</option>{% endfor %}
+          </select>
+          <div class="form-text text-muted mt-1">
+            <i class="fas fa-info-circle me-1"></i>
+            إذا حمّلت القالب من الزر أعلاه بعد اختيار مجمع، سيتم التصنيف تلقائياً دون الحاجة لتحديده هنا.
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-bold">تاريخ البيانات</label>
+          <input type="date" name="record_date" class="form-control" required
+                 value="{{ today }}"
+                 style="border:2px solid #e0e0e0;border-radius:10px;">
+        </div>
+        <div class="mb-4">
+          <label class="form-label fw-bold">ملف Excel</label>
+          <input type="file" name="excel_file" class="form-control" accept=".xlsx,.xls" required
+                 style="border:2px solid #e0e0e0;border-radius:10px;">
+          <div class="form-text text-muted mt-1">
+            <i class="fas fa-info-circle me-1"></i>
+            تأكد أن الملف مبني على القالب وأنك حذفت صف المثال قبل الرفع
+          </div>
+        </div>
+        <button type="submit" class="btn-primary-custom">
+          <i class="fas fa-file-import me-1"></i> استيراد البيانات
+        </button>
+      </form>
+    </div></div>
+  </div>
+
+  {# ── بطاقة إصلاح المدارس بدون مجمع ── #}
+  {% set orphan_count = orphan_schools_count %}
+  {% if orphan_count %}
+  <div class=\"col-12\">
+    <div class=\"card border-0\" style=\"background:linear-gradient(135deg,#fff3e0,#ffe0b2);\">
+      <div class=\"card-body d-flex align-items-center gap-3 flex-wrap\">
+        <div>
+          <h6 class=\"mb-1 fw-bold text-warning\"><i class=\"fas fa-exclamation-triangle me-1\"></i> تحذير: مدارس بدون مجمع</h6>
+          <p class=\"mb-0 text-muted\" style=\"font-size:13px;\">
+            يوجد <strong>{{ orphan_count }} مدرسة</strong> مستوردة بدون مجمع — لن تظهر في الواجهة.
+            اضغط الزر لنقلها إلى «مجمع افتراضي» يمكن تعديله لاحقاً.
+          </p>
+        </div>
+        <form method=\"POST\" action=\"{{ url_for('fix_orphan_schools') }}\" class=\"ms-auto\">
+          <button type=\"submit\" class=\"btn btn-warning fw-bold\" style=\"border-radius:10px;\">
+            <i class=\"fas fa-wrench me-1\"></i> إصلاح المدارس بدون مجمع ({{ orphan_count }})
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {# ── بطاقة التعليمات ── #}
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header" style="background:linear-gradient(135deg,#1565c0,#1e88e5);">
+        <i class="fas fa-info-circle"></i> تعليمات الاستخدام
+      </div>
+      <div class="card-body" style="font-size:13px;">
+        <ol class="mb-3 text-muted ps-3">
+          <li class="mb-2">اختر المجمع (اختياري) ثم حمّل القالب من الزر أعلاه — سيُحفظ اسم المجمع داخل القالب تلقائياً.</li>
+          <li class="mb-2">عبّئ بيانات كل مدرسة في صف منفصل.</li>
+          <li class="mb-2"><strong>احذف صف المثال</strong> (الصف الرابع) قبل الرفع.</li>
+          <li class="mb-2">حدّد تاريخ السجل ثم ارفع الملف — إن كان القالب يحمل اسم المجمع، لن تحتاج لاختياره مرة أخرى.</li>
+        </ol>
+        <hr>
+        <p class="fw-bold mb-2 text-primary"><i class="fas fa-exclamation-triangle me-1 text-warning"></i> الحقول الإلزامية:</p>
+        <div class="d-flex flex-wrap gap-2">
+          {% for col in ['اسم المدرسة','النوع','المعلمين','الإداريين','الخدمات_المساندة'] %}
+          <span class="badge" style="background:#FCE4D6;color:#7B2D00;font-size:12px;padding:6px 10px;border-radius:8px;">{{ col }}</span>
+          {% endfor %}
+        </div>
+        <p class="mt-3 mb-2 fw-bold text-primary"><i class="fas fa-table me-1"></i> الأعمدة المتاحة:</p>
+        <div class="d-flex flex-wrap gap-1" style="font-size:11px;">
+          {% for col in ['KG1','KG2','KG3',
+            'أولى ابتدائي','ثاني ابتدائي','ثالث ابتدائي',
+            'رابع ابتدائي','خامس ابتدائي','سادس ابتدائي',
+            'أول متوسط','ثاني متوسط','ثالث متوسط',
+            'أول ثانوي','ثاني ثانوي','ثالث ثانوي'] %}
+          <span class="badge bg-light text-dark border">{{ col }} (فصول + طلاب)</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  (function () {
+    var select = document.getElementById('complexSelect');
+    var link   = document.getElementById('downloadTemplateLink');
+    var baseHref = link.getAttribute('href');
+
+    function updateTemplateLink() {
+      link.href = select.value ? (baseHref + '?complex_id=' + encodeURIComponent(select.value)) : baseHref;
+    }
+
+    select.addEventListener('change', updateTemplateLink);
+    updateTemplateLink();
+  })();
+</script>
+{% endblock %}

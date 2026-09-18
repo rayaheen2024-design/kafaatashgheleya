@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}إضافة مدرسة{% endblock %}
+{% block page_title %}إضافة مدرسة جديدة{% endblock %}
+{% block content %}
+<div class="row justify-content-center"><div class="col-md-6">
+  <div class="card"><div class="card-header"><i class="fas fa-school"></i> بيانات المدرسة</div>
+  <div class="card-body">
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label fw-bold">المجمع <span class="text-danger">*</span></label>
+        <select name="complex_id" class="form-select" required style="border:2px solid #e0e0e0;border-radius:10px;">
+          <option value="">اختر المجمع</option>
+          {% for cx in complexes %}<option value="{{ cx.id }}">{{ cx.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-bold">اسم المدرسة <span class="text-danger">*</span></label>
+        <input type="text" name="name" class="form-control" required
+               style="border:2px solid #e0e0e0;border-radius:10px;">
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-bold">النوع</label>
+        <select name="school_type" class="form-select" style="border:2px solid #e0e0e0;border-radius:10px;">
+          <option>بنين</option><option>بنات</option><option>مختلط</option>
+        </select>
+      </div>
+      <div class="mb-4">
+        <label class="form-label fw-bold">المرحلة</label>
+        <select name="school_level" class="form-select" style="border:2px solid #e0e0e0;border-radius:10px;">
+          <option>كل المراحل</option><option>ابتدائي</option><option>متوسط</option><option>ثانوي</option>
+        </select>
+      </div>
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn-primary-custom"><i class="fas fa-save"></i> حفظ</button>
+        <a href="{{ url_for('list_schools') }}" class="btn btn-outline-secondary">إلغاء</a>
+      </div>
+    </form>
+  </div></div>
+</div></div>
+{% endblock %}

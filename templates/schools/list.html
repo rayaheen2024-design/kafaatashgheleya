@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}المدارس{% endblock %}
+{% block page_title %}إدارة المدارس{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div class="d-flex gap-2 align-items-center">
+    <h6 class="text-muted mb-0">{{ schools|length }} مدرسة</h6>
+    <select onchange="location='?complex_id='+this.value"
+            class="form-select form-select-sm" style="width:auto;border-radius:8px;">
+      <option value="">كل المجمعات</option>
+      {% for cx in complexes %}
+      <option value="{{ cx.id }}" {{ 'selected' if current_complex and current_complex.id==cx.id }}>{{ cx.name }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <a href="{{ url_for('add_school') }}" class="btn-primary-custom"><i class="fas fa-plus"></i> إضافة مدرسة</a>
+</div>
+<div class="card"><div class="card-body p-0">
+  {% if schools %}
+  <table class="table table-hover mb-0" style="font-size:14px;">
+    <thead style="background:#f8fffe;">
+      <tr><th class="px-4">#</th><th>المدرسة</th><th>المجمع</th><th class="text-center">النوع</th><th class="text-center">إجراءات</th></tr>
+    </thead>
+    <tbody>
+    {% for s in schools %}
+    <tr>
+      <td class="px-4 text-muted">{{ loop.index }}</td>
+      <td class="fw-bold"><i class="fas fa-school text-primary me-2"></i>{{ s.name }}</td>
+      <td class="text-muted">{{ s.complex.name }}</td>
+      <td class="text-center">
+        <span class="badge {{ 'bg-primary' if s.school_type=='بنين' else 'bg-danger' }}">{{ s.school_type or '-' }}</span>
+      </td>
+      <td class="text-center">
+        <a href="{{ url_for('data_entry', sid=s.id) }}" class="btn btn-sm btn-outline-success me-1"><i class="fas fa-edit"></i> إدخال</a>
+        <a href="{{ url_for('school_report', sid=s.id) }}" class="btn-report me-1"><i class="fas fa-chart-bar"></i> تقرير</a>
+        <form method="POST" action="{{ url_for('delete_school', sid=s.id) }}" style="display:inline"
+              onsubmit="return confirm('هل تريد حذف هذه المدرسة؟')">
+          <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="text-center py-5">
+    <i class="fas fa-school fa-3x text-muted mb-3 d-block"></i>
+    <p class="text-muted">لا توجد مدارس</p>
+    <a href="{{ url_for('add_school') }}" class="btn-primary-custom">إضافة مدرسة</a>
+  </div>
+  {% endif %}
+</div></div>
+{% endblock %}

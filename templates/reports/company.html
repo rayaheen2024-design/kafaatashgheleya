@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}تقرير الكفاءة التشغيلية للشركة{% endblock %}
+{% block page_title %}تقرير الكفاءة التشغيلية للشركة{% endblock %}
+{% block page_subtitle %}جميع المجمعات والمدارس{% endblock %}
+{% block content %}
+<div class="d-flex gap-2 align-items-center flex-wrap mb-4 no-print">
+  <button onclick="window.print()" class="btn-primary-custom"><i class="fas fa-print me-1"></i> طباعة</button>
+  <span class="print-option-toggle">
+    <input type="checkbox" id="showWeakPointsCompany" onchange="toggleWeakPointsPrint(this)">
+    <label for="showWeakPointsCompany">إظهار نقاط الضعف عند الطباعة</label>
+  </span>
+</div>
+<script>document.body.classList.add("hide-weak-points");</script>
+<div class="card mb-4"><div class="card-body text-center py-4">
+  <h4 class="fw-bold text-success mb-1">تقرير الكفاءة التشغيلية للشركة</h4>
+  <p class="text-muted mb-0">جميع المجمعات والمدارس</p>
+</div></div>
+{% for cd in complexes_data %}{% set cx=cd.complex %}{% set mx=cd.metrics %}
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="fas fa-building me-2"></i>{{ cx.name }}</span>
+    <a href="{{ url_for('complex_report', cid=cx.id) }}" class="btn-report">تقرير المجمع</a>
+  </div>
+  <div class="card-body p-0"><div class="table-responsive">
+    <table class="efficiency-table">
+      <thead><tr>
+        <th>{{ col.col_school }}</th><th>{{ col.col_students }}</th><th>{{ col.col_classes }}</th>
+        <th>{{ col.col_density }}</th><th>{{ col.col_CCR }}</th><th>{{ col.col_STR }}</th><th>{{ col.col_SAR }}</th><th>{{ col.col_SER }}</th><th>نقاط الضعف</th>
+      </tr></thead>
+      <tbody>
+      {% for item in mx.schools %}{% set m=item.metrics %}
+      <tr>
+        <td class="fw-bold text-start px-3">{{ item.school.name }}</td>
+        <td>{{ m.total_students }}</td><td>{{ m.total_classes }}</td>
+        <td><span class="ratio-cell ratio-{{ m.density_status }}">{{ m.avg_density }}</span></td>
+        <td><span class="ratio-cell ratio-{{ m.CCR_status }}">{{ m.CCR }}</span></td>
+        <td><span class="ratio-cell ratio-{{ m.STR_status }}">{{ m.STR }}</span></td>
+        <td><span class="ratio-cell ratio-{{ m.SAR_status }}">{{ m.SAR }}</span></td>
+        <td><span class="ratio-cell ratio-{{ m.SER_status }}">{{ m.SER }}</span></td>
+        <td>{% if m.weak_points %}<span class="badge bg-danger">{{ m.weak_points|length }} نقطة</span>
+            {% else %}<span class="badge bg-success">✅ ممتاز</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+      <tr style="background:#e8f5e9;font-weight:900;">
+        <td class="text-start px-3 fw-bold">إجمالي {{ cx.name }}</td>
+        <td>{{ mx.total_students }}</td><td>{{ mx.total_classes }}</td>
+        <td><span class="ratio-cell ratio-{{ mx.density_status }}">{{ mx.avg_density }}</span></td>
+        <td><span class="ratio-cell ratio-{{ mx.CCR_status }}">{{ mx.CCR }}</span></td>
+        <td><span class="ratio-cell ratio-{{ mx.STR_status }}">{{ mx.STR }}</span></td>
+        <td><span class="ratio-cell ratio-{{ mx.SAR_status }}">{{ mx.SAR }}</span></td>
+        <td><span class="ratio-cell ratio-{{ mx.SER_status }}">{{ mx.SER }}</span></td>
+        <td>-</td>
+      </tr>
+      </tbody>
+    </table>
+  </div></div>
+
+  {# ===== نقاط الضعف التفصيلية أسفل كل مجمع ===== #}
+  {% set has_weak = [] %}
+  {% for item in mx.schools %}
+    {% if item.metrics.weak_points %}
+      {% set _ = has_weak.append(1) %}
+    {% endif %}
+  {% endfor %}
+
+  {% if has_weak %}
+  <div class="card-footer p-0 weak-points-section">
+    <div style="background:linear-gradient(135deg,#b71c1c,#e53935);color:#fff;padding:10px 16px;font-weight:bold;">
+      <i class="fas fa-exclamation-triangle me-2"></i> نقاط الضعف في مدارس {{ cx.name }}
+    </div>
+    <div class="p-3">
+      {% for item in mx.schools %}
+        {% set m = item.metrics %}
+        {% if m.weak_points %}
+        <div class="mb-3">
+          <h6 class="fw-bold text-primary border-bottom pb-1 mb-2">
+            <i class="fas fa-school me-1"></i> {{ item.school.name }}
+          </h6>
+          {% for wp in m.weak_points %}
+          <div class="weak-point">
+            <div class="weak-icon"><i class="fas fa-times"></i></div>
+            <div class="weak-info">
+              <h6>{{ wp.title }}</h6><p>{{ wp.description }}</p>
+              <small class="text-danger fw-bold">القيمة: {{ wp.value }} | المعيار: ≥ {{ wp.standard }}</small>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endfor %}
+{% endblock %}
