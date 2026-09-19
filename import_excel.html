@@ -65,19 +65,19 @@
   {# ── بطاقة إصلاح المدارس بدون مجمع ── #}
   {% set orphan_count = orphan_schools_count %}
   {% if orphan_count %}
-  <div class=\"col-12\">
-    <div class=\"card border-0\" style=\"background:linear-gradient(135deg,#fff3e0,#ffe0b2);\">
-      <div class=\"card-body d-flex align-items-center gap-3 flex-wrap\">
+  <div class="col-12">
+    <div class="card border-0" style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);">
+      <div class="card-body d-flex align-items-center gap-3 flex-wrap">
         <div>
-          <h6 class=\"mb-1 fw-bold text-warning\"><i class=\"fas fa-exclamation-triangle me-1\"></i> تحذير: مدارس بدون مجمع</h6>
-          <p class=\"mb-0 text-muted\" style=\"font-size:13px;\">
+          <h6 class="mb-1 fw-bold text-warning"><i class="fas fa-exclamation-triangle me-1"></i> تحذير: مدارس بدون مجمع</h6>
+          <p class="mb-0 text-muted" style="font-size:13px;">
             يوجد <strong>{{ orphan_count }} مدرسة</strong> مستوردة بدون مجمع — لن تظهر في الواجهة.
             اضغط الزر لنقلها إلى «مجمع افتراضي» يمكن تعديله لاحقاً.
           </p>
         </div>
-        <form method=\"POST\" action=\"{{ url_for('fix_orphan_schools') }}\" class=\"ms-auto\">
-          <button type=\"submit\" class=\"btn btn-warning fw-bold\" style=\"border-radius:10px;\">
-            <i class=\"fas fa-wrench me-1\"></i> إصلاح المدارس بدون مجمع ({{ orphan_count }})
+        <form method="POST" action="{{ url_for('fix_orphan_schools') }}" class="ms-auto">
+          <button type="submit" class="btn btn-warning fw-bold" style="border-radius:10px;">
+            <i class="fas fa-wrench me-1"></i> إصلاح المدارس بدون مجمع ({{ orphan_count }})
           </button>
         </form>
       </div>
