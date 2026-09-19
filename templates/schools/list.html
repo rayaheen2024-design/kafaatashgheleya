@@ -2,6 +2,31 @@
 {% block title %}المدارس{% endblock %}
 {% block page_title %}إدارة المدارس{% endblock %}
 {% block content %}
+
+{# ── تحذير المدارس بدون مجمع ── #}
+{% if orphan_schools_count %}
+<div class="alert d-flex align-items-center gap-3 flex-wrap mb-4"
+     style="background:linear-gradient(135deg,#fff3e0,#ffe0b2);border:1.5px solid #ffb74d;border-radius:12px;padding:16px 20px;">
+  <div class="flex-grow-1">
+    <h6 class="mb-1 fw-bold" style="color:#e65100;">
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      يوجد {{ orphan_schools_count }} مدرسة بدون مجمع — لن تظهر في التقارير
+    </h6>
+    <p class="mb-0 text-muted" style="font-size:13px;">
+      هذه المدارس تم استيرادها بدون تحديد مجمع. اضغط الزر لنقلها إلى «مجمع افتراضي» يمكن تعديله لاحقاً.
+    </p>
+  </div>
+  <form method="POST" action="{{ url_for('fix_orphan_schools') }}">
+    <button type="submit" class="btn fw-bold" style="background:#ff9800;color:#fff;border-radius:10px;padding:8px 20px;">
+      <i class="fas fa-wrench me-1"></i> إصلاح الآن ({{ orphan_schools_count }})
+    </button>
+  </form>
+  <a href="{{ url_for('import_excel') }}" class="btn btn-outline-secondary btn-sm" style="border-radius:10px;">
+    <i class="fas fa-file-import me-1"></i> صفحة الاستيراد
+  </a>
+</div>
+{% endif %}
+
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
   <div class="d-flex gap-2 align-items-center">
     <h6 class="text-muted mb-0">{{ schools|length }} مدرسة</h6>
@@ -11,10 +36,14 @@
       {% for cx in complexes %}
       <option value="{{ cx.id }}" {{ 'selected' if current_complex and current_complex.id==cx.id }}>{{ cx.name }}</option>
       {% endfor %}
+      {% if orphan_schools_count %}
+      <option value="orphan" {{ 'selected' if show_orphans }}>⚠️ بدون مجمع ({{ orphan_schools_count }})</option>
+      {% endif %}
     </select>
   </div>
   <a href="{{ url_for('add_school') }}" class="btn-primary-custom"><i class="fas fa-plus"></i> إضافة مدرسة</a>
 </div>
+
 <div class="card"><div class="card-body p-0">
   {% if schools %}
   <table class="table table-hover mb-0" style="font-size:14px;">
@@ -23,10 +52,21 @@
     </thead>
     <tbody>
     {% for s in schools %}
-    <tr>
+    <tr {% if not s.complex %}style="background:#fff8e1;"{% endif %}>
       <td class="px-4 text-muted">{{ loop.index }}</td>
-      <td class="fw-bold"><i class="fas fa-school text-primary me-2"></i>{{ s.name }}</td>
-      <td class="text-muted">{{ s.complex.name }}</td>
+      <td class="fw-bold">
+        <i class="fas fa-school {% if s.complex %}text-primary{% else %}text-warning{% endif %} me-2"></i>
+        {{ s.name }}
+      </td>
+      <td class="text-muted">
+        {% if s.complex %}
+          {{ s.complex.name }}
+        {% else %}
+          <span class="badge" style="background:#fff3e0;color:#e65100;border:1px solid #ffb74d;">
+            <i class="fas fa-exclamation-triangle me-1"></i> بدون مجمع
+          </span>
+        {% endif %}
+      </td>
       <td class="text-center">
         <span class="badge {{ 'bg-primary' if s.school_type=='بنين' else 'bg-danger' }}">{{ s.school_type or '-' }}</span>
       </td>

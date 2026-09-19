@@ -141,11 +141,23 @@ def delete_complex(cid):
 
 @app.route("/schools")
 def list_schools():
-    cid = request.args.get("complex_id", type=int)
+    cid_raw = request.args.get("complex_id", "")
     complexes = Complex.query.filter_by(is_active=True).all()
-    schools = School.query.filter_by(complex_id=cid, is_active=True).all() if cid else School.query.filter_by(is_active=True).all()
-    cx = Complex.query.get(cid) if cid else None
-    return render_template("schools/list.html", schools=schools, complexes=complexes, current_complex=cx)
+    orphan_count = School.query.filter_by(complex_id=None, is_active=True).count()
+    show_orphans = (cid_raw == "orphan")
+    if show_orphans:
+        schools = School.query.filter_by(complex_id=None, is_active=True).all()
+        cx = None
+    elif cid_raw and cid_raw.isdigit():
+        cid = int(cid_raw)
+        schools = School.query.filter_by(complex_id=cid, is_active=True).all()
+        cx = Complex.query.get(cid)
+    else:
+        schools = School.query.filter_by(is_active=True).all()
+        cx = None
+    return render_template("schools/list.html", schools=schools, complexes=complexes,
+                           current_complex=cx, orphan_schools_count=orphan_count,
+                           show_orphans=show_orphans)
 
 @app.route("/schools/add", methods=["GET","POST"])
 def add_school():
@@ -283,7 +295,8 @@ def import_excel():
                 if not school:
                     school = School(name=sname, complex_id=row_cid,
                                     school_type=str(row.get("النوع","بنين")),
-                                    school_level=str(row.get("مستوى المدرسة","") or ""))
+                                    school_level=str(row.get("مستوى المدرسة","") or ""),
+                                    is_active=True)
                     db.session.add(school)
                     db.session.flush()
                 def rv(c):
@@ -326,6 +339,14 @@ def import_excel():
             if auto_created_names:
                 names_str = "، ".join(auto_created_names)
                 flash(f"تم إنشاء {len(auto_created_names)} مجمع جديد تلقائياً: {names_str}", "info")
+            # تحذير إن وُجدت مدارس بدون مجمع بعد الاستيراد
+            new_orphans = School.query.filter_by(complex_id=None, is_active=True).count()
+            if new_orphans:
+                flash(
+                    f"⚠️ {new_orphans} مدرسة استُوردت بدون مجمع — "
+                    f"توجّه إلى صفحة المدارس واضغط «إصلاح الآن» لنقلها إلى مجمع.",
+                    "warning"
+                )
         except Exception as e:
             db.session.rollback()
             flash(f"خطأ: {e}","error")
