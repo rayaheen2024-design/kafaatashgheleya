@@ -259,13 +259,18 @@ def import_excel():
                 if not row_cid:
                     row_complex_name = str(row.get("اسم المجمع", "")).strip()
                     if row_complex_name and row_complex_name not in ("None", "اسم المجمع هنا"):
-                        matched = next((c for c in complexes if c.name.strip() == row_complex_name), None)
-                        if matched:
-                            row_cid = matched.id
+                        # أولاً: هل أنشأناه في نفس جلسة الاستيراد الحالية؟
+                        if row_complex_name in created_complexes:
+                            row_cid = created_complexes[row_complex_name].id
                         else:
-                            if row_complex_name in created_complexes:
-                                row_cid = created_complexes[row_complex_name].id
+                            # ثانياً: ابحث في قاعدة البيانات (نشط أو محذوف)
+                            matched = Complex.query.filter_by(name=row_complex_name).first()
+                            if matched:
+                                if not matched.is_active:
+                                    matched.is_active = True  # أعد تفعيله لو كان محذوفاً
+                                row_cid = matched.id
                             else:
+                                # ثالثاً: أنشئه جديداً
                                 new_cx = Complex(name=row_complex_name)
                                 db.session.add(new_cx)
                                 db.session.flush()
