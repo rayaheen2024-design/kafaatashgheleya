@@ -14,10 +14,22 @@ from calculations import (calculate_school_metrics, calculate_complex_metrics,
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
-app.config["SECRET_KEY"]                   = "school-efficiency-2024"
-app.config["SQLALCHEMY_DATABASE_URI"]      = "sqlite:///" + os.path.join(BASEDIR, "instance", "school_efficiency.db")
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "school-efficiency-2024")
+
+# ─── قاعدة البيانات ───
+# على Render: يُضبط DATABASE_URL تلقائياً عند ربط PostgreSQL
+# محلياً: يتراجع إلى SQLite
+raw_db_url = os.environ.get("DATABASE_URL", "")
+if raw_db_url.startswith("postgres://"):
+    # SQLAlchemy يحتاج postgresql:// وليس postgres://
+    raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = (
+    raw_db_url or "sqlite:///" + os.path.join(BASEDIR, "instance", "school_efficiency.db")
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["UPLOAD_FOLDER"]               = os.path.join(BASEDIR, "uploads")
+app.config["UPLOAD_FOLDER"] = os.path.join(BASEDIR, "uploads")
+
 db.init_app(app)
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 os.makedirs(os.path.join(BASEDIR, "instance"), exist_ok=True)
@@ -158,7 +170,6 @@ def data_entry(sid):
     if request.method == "POST":
         rd = datetime.strptime(request.form.get("record_date"),"%Y-%m-%d").date()
         f  = request.form
-        # تحديث السجل إن وُجد لنفس اليوم، وإلا إنشاء جديد
         gd = GradeData.query.filter_by(school_id=sid, record_date=rd).first()
         grade_fields = dict(
             kg1_classes=_int(f,"kg1_classes"), kg1_students=_int(f,"kg1_students"),
@@ -217,9 +228,9 @@ def import_excel():
     complexes = Complex.query.filter_by(is_active=True).all()
     if request.method == "POST":
         f   = request.files.get("excel_file")
-        cid = request.form.get("complex_id", type=int)  # أصبح اختيارياً
+        cid = request.form.get("complex_id", type=int)
         rd  = datetime.strptime(request.form.get("record_date"),"%Y-%m-%d").date()
-        if not f or not f.filename: 
+        if not f or not f.filename:
             flash("اختر ملف","error")
             return redirect(url_for("import_excel"))
         path = os.path.join(app.config["UPLOAD_FOLDER"], f.filename)
@@ -227,9 +238,7 @@ def import_excel():
         try:
             wb = openpyxl.load_workbook(path)
             ws = wb.active
-
             rows = list(ws.iter_rows(values_only=True))
-            # اكتشاف صف الهيدر تلقائياً: أول صف يحتوي على "اسم المدرسة"
             header_row_idx = None
             for i, r in enumerate(rows):
                 if any(str(c).strip() == "اسم المدرسة" for c in r if c):
@@ -240,40 +249,29 @@ def import_excel():
                 return redirect(url_for("import_excel"))
             headers = [str(h).strip() if h else "" for h in rows[header_row_idx]]
             count = 0
-            created_complexes = {}   # اسم المجمع → كائن Complex (مُنشأ حديثاً في هذه الجلسة)
-            auto_created_names = []  # لإبلاغ المستخدم بالمجمعات التي أُنشئت تلقائياً
-
+            created_complexes = {}
+            auto_created_names = []
             for row_vals in rows[header_row_idx + 1:]:
                 row = {headers[i]: row_vals[i] if i < len(row_vals) else 0 for i in range(len(headers))}
                 sname = str(row.get("اسم المدرسة","")).strip()
                 if not sname or sname=="None": continue
-
-                # تحديد المجمع لكل صف:
-                # 1) إذا اختار المستخدم مجمعاً يدوياً من الصفحة → يُستخدم دائماً
-                # 2) وإلا → اقرأ اسم المجمع من عمود "اسم المجمع" في الصف
-                #    أ) إذا وُجد مجمع بنفس الاسم → ربطه
-                #    ب) إذا لم يوجد → إنشاء مجمع جديد تلقائياً (مع تجنّب التكرار)
                 row_cid = cid
                 if not row_cid:
                     row_complex_name = str(row.get("اسم المجمع", "")).strip()
                     if row_complex_name and row_complex_name not in ("None", "اسم المجمع هنا"):
-                        # بحث في قاعدة البيانات (مطابقة بعد strip)
                         matched = next((c for c in complexes if c.name.strip() == row_complex_name), None)
                         if matched:
                             row_cid = matched.id
                         else:
-                            # بحث ضمن المجمعات المُنشأة للتو في نفس الجلسة
                             if row_complex_name in created_complexes:
                                 row_cid = created_complexes[row_complex_name].id
                             else:
-                                # إنشاء مجمع جديد تلقائياً
                                 new_cx = Complex(name=row_complex_name)
                                 db.session.add(new_cx)
-                                db.session.flush()   # نحصل على id فوراً
+                                db.session.flush()
                                 created_complexes[row_complex_name] = new_cx
                                 auto_created_names.append(row_complex_name)
                                 row_cid = new_cx.id
-
                 school = School.query.filter_by(name=sname, complex_id=row_cid).first()
                 if not school:
                     school = School(name=sname, complex_id=row_cid,
@@ -281,10 +279,9 @@ def import_excel():
                                     school_level=str(row.get("مستوى المدرسة","") or ""))
                     db.session.add(school)
                     db.session.flush()
-                def rv(c): 
+                def rv(c):
                     try: return int(row.get(c,0) or 0)
                     except: return 0
-                # GradeData — تحديث إن وُجد لنفس اليوم
                 gd_existing = GradeData.query.filter_by(school_id=school.id, record_date=rd).first()
                 grade_vals = dict(
                     kg1_classes=rv("KG1_فصول"), kg1_students=rv("KG1_طلاب"),
@@ -306,7 +303,6 @@ def import_excel():
                     for k, v in grade_vals.items(): setattr(gd_existing, k, v)
                 else:
                     db.session.add(GradeData(school_id=school.id, record_date=rd, **grade_vals))
-                # StaffRecord — تحديث إن وُجد لنفس اليوم
                 sr_existing = StaffRecord.query.filter_by(school_id=school.id, record_date=rd).first()
                 staff_vals = dict(
                     teachers=rv("المعلمين"), admins=rv("الإداريين"),
@@ -335,12 +331,10 @@ def import_excel():
 
 @app.route("/fix-orphan-schools", methods=["POST"])
 def fix_orphan_schools():
-    """إصلاح المدارس المستوردة بدون مجمع: إنشاء مجمع افتراضي ونقلها إليه."""
     orphans = School.query.filter_by(complex_id=None, is_active=True).all()
     if not orphans:
         flash("لا توجد مدارس بدون مجمع ✅", "info")
         return redirect(url_for("import_excel"))
-    # إيجاد أو إنشاء مجمع افتراضي
     default_cx = Complex.query.filter_by(name="مجمع افتراضي").first()
     if not default_cx:
         default_cx = Complex(name="مجمع افتراضي", description="مجمع تلقائي للمدارس غير المصنّفة")
@@ -388,8 +382,6 @@ def company_report():
     return render_template("reports/company.html", complexes_data=all_data, STANDARDS=STANDARDS)
 
 
-
-
 @app.route("/download-template")
 def download_template():
     import io, openpyxl
@@ -397,8 +389,6 @@ def download_template():
     from openpyxl.utils import get_column_letter
     from flask import send_file
 
-    # المجمع الذي طُلب تحميل القالب له (اختياري) — يُكتب اسمه داخل القالب
-    # ليُستخدم عند الاستيراد لاحقاً دون الحاجة لاختياره يدوياً
     complex_id  = request.args.get("complex_id", type=int)
     complex_obj = Complex.query.get(complex_id) if complex_id else None
 
@@ -414,7 +404,6 @@ def download_template():
     thin = Border(left=Side(style="thin"), right=Side(style="thin"),
                   top=Side(style="thin"),  bottom=Side(style="thin"))
 
-    # صف 1: تعليمات
     ws.merge_cells("A1:AJ1")
     ws["A1"] = "📋 قالب استيراد بيانات المدارس — أدخل بيانات كل مدرسة في صف منفصل | الخلايا البرتقالية إلزامية | الصف الثاني مثال فقط (احذفه)"
     ws["A1"].font      = Font(name="Arial", bold=True, color="7B2D00", size=11)
@@ -422,7 +411,6 @@ def download_template():
     ws["A1"].alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
     ws.row_dimensions[1].height = 30
 
-    # صف 2: مجموعات
     for cell_range, label in [
         ("A2:B2",  "معلومات المدرسة"),
         ("C2:H2",  "رياض الأطفال"),
@@ -441,7 +429,6 @@ def download_template():
         c.border = thin
     ws.row_dimensions[2].height = 22
 
-    # صف 3: أسماء الأعمدة
     columns = [
         ("اسم المدرسة", True), ("النوع", True),
         ("KG1_فصول", False), ("KG1_طلاب", False),
@@ -471,7 +458,6 @@ def download_template():
         cell.border    = thin
     ws.row_dimensions[3].height = 35
 
-    # صف 4: مثال
     example = [
         "مدرسة النموذج الابتدائية", "بنين",
         2,38, 2,35, 0,0,
@@ -489,10 +475,7 @@ def download_template():
         cell.border    = thin
     ws.row_dimensions[4].height = 18
 
-    # عمود "اسم المجمع" هو آخر عمود (رقم 38 = AJ)
-    complex_col_idx = len(columns)  # = 38
-
-    # صفوف 5-54: فارغة، مع كتابة اسم المجمع تلقائياً إن كان محدداً
+    complex_col_idx = len(columns)
     for row in range(5, 55):
         for col in range(1, len(columns) + 1):
             cell = ws.cell(row=row, column=col)
@@ -500,17 +483,14 @@ def download_template():
             cell.border    = thin
             cell.font      = Font(name="Arial", size=10)
             cell.alignment = Alignment(horizontal="center", vertical="center")
-            # كتابة اسم المجمع تلقائياً في عمود "اسم المجمع" إن كان مجمع محدد
             if col == complex_col_idx and complex_obj:
                 cell.value = complex_obj.name
         ws.row_dimensions[row].height = 18
 
-    # عرض الأعمدة
     for i, w in enumerate([30,12]+[12,10]*15+[12,12,16]+[18,20,18], start=1):
         ws.column_dimensions[get_column_letter(i)].width = w
     ws.freeze_panes = "A4"
 
-    # ورقة التعليمات
     wi = wb.create_sheet("تعليمات")
     wi.sheet_view.rightToLeft = True
     for r, (text, bold) in enumerate([
@@ -529,7 +509,6 @@ def download_template():
         if bold: c.fill = PatternFill("solid", fgColor="D9E1F2")
     wi.column_dimensions["A"].width = 70
 
-    # إرسال الملف
     buf = io.BytesIO()
     wb.save(buf)
     buf.seek(0)
