@@ -544,5 +544,24 @@ def download_template():
                      download_name="قالب_استيراد_المدارس.xlsx",
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
+@app.route("/debug-db")
+def debug_db():
+    db_url = app.config.get("SQLALCHEMY_DATABASE_URI", "")
+    db_type = "PostgreSQL" if "postgresql" in db_url else "SQLite"
+    complexes = Complex.query.all()
+    schools = School.query.all()
+    lines = [
+        "<h2>تشخيص قاعدة البيانات</h2>",
+        f"<p><b>النوع:</b> {db_type}</p>",
+        f"<p><b>URL (أول 40 حرف):</b> {db_url[:40]}...</p>",
+        f"<p><b>المجمعات:</b> {len(complexes)}</p>",
+        f"<p><b>المدارس الكلية:</b> {len(schools)}</p>",
+        "<hr><ul>",
+    ]
+    for s in schools:
+        lines.append(f"<li>{s.name} | complex_id={s.complex_id} | is_active={s.is_active}</li>")
+    lines.append("</ul>")
+    return "".join(lines)
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
