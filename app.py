@@ -299,6 +299,8 @@ def import_excel():
                                     is_active=True)
                     db.session.add(school)
                     db.session.flush()
+                else:
+                    school.is_active = True
                 def rv(c):
                     try: return int(row.get(c,0) or 0)
                     except: return 0
@@ -543,6 +545,15 @@ def download_template():
     return send_file(buf, as_attachment=True,
                      download_name="قالب_استيراد_المدارس.xlsx",
                      mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+@app.route("/fix-all-schools")
+def fix_all_schools():
+    schools = School.query.filter_by(is_active=False).all()
+    count = len(schools)
+    for s in schools:
+        s.is_active = True
+    db.session.commit()
+    return f"تم تفعيل {count} مدرسة — <a href='/schools'>اذهب للمدارس</a>"
 
 @app.route("/debug-db")
 def debug_db():
