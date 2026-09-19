@@ -254,7 +254,7 @@ def import_excel():
             for row_vals in rows[header_row_idx + 1:]:
                 row = {headers[i]: row_vals[i] if i < len(row_vals) else 0 for i in range(len(headers))}
                 sname = str(row.get("اسم المدرسة","")).strip()
-                if not sname or sname=="None": continue
+                if not sname or sname in ("None", "اسم المدرسة"): continue
                 row_cid = cid
                 if not row_cid:
                     row_complex_name = str(row.get("اسم المجمع", "")).strip()
@@ -263,8 +263,9 @@ def import_excel():
                         if row_complex_name in created_complexes:
                             row_cid = created_complexes[row_complex_name].id
                         else:
-                            # ثانياً: ابحث في قاعدة البيانات (نشط أو محذوف)
-                            matched = Complex.query.filter_by(name=row_complex_name).first()
+                            # ثانياً: ابحث في قاعدة البيانات (نشط أو محذوف) — مع تجاهل المسافات
+                            all_complexes = Complex.query.all()
+                            matched = next((c for c in all_complexes if c.name.strip() == row_complex_name.strip()), None)
                             if matched:
                                 if not matched.is_active:
                                     matched.is_active = True  # أعد تفعيله لو كان محذوفاً
@@ -277,7 +278,8 @@ def import_excel():
                                 created_complexes[row_complex_name] = new_cx
                                 auto_created_names.append(row_complex_name)
                                 row_cid = new_cx.id
-                school = School.query.filter_by(name=sname, complex_id=row_cid).first()
+                all_schools = School.query.filter_by(complex_id=row_cid).all()
+                school = next((s for s in all_schools if s.name.strip() == sname), None)
                 if not school:
                     school = School(name=sname, complex_id=row_cid,
                                     school_type=str(row.get("النوع","بنين")),
